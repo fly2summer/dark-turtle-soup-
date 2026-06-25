@@ -1,0 +1,438 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta http-equiv="Cache-Control" content="no-cache"><title>暗黑·海龟汤</title>
+<style>
+:root{--bg:#121110;--card:#1a1815;--text:#c8c0b0;--text-dim:#7a7060;--amber:#d4a040;--dim-amber:#5a4020;--border:#2a2520;--input-bg:#1a1815;--soup-text:#b8a890}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:serif;min-height:100vh;line-height:1.9;font-size:17px}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 30px,rgba(200,160,60,0.02) 30px,rgba(200,160,60,0.02) 32px);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:32px 24px 80px}
+.scr{min-height:70vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:28px}
+.title{font-size:52px;font-weight:900;letter-spacing:12px;color:var(--amber)}
+.inp{background:var(--input-bg);border:1px solid var(--border);color:var(--amber);padding:14px 20px;font-size:17px;font-family:inherit;width:260px;text-align:center;letter-spacing:2px;outline:none}
+.btn{background:transparent;border:1px solid var(--amber);color:var(--amber);padding:14px 48px;font-family:monospace;font-size:14px;letter-spacing:5px;cursor:pointer}
+.gm{display:none}
+.bowl{background:var(--card);border:1px solid var(--border);padding:30px 26px;margin-bottom:24px;line-height:2;color:var(--soup-text);position:relative}
+.bowl::before{content:'汤 面';position:absolute;top:-13px;left:24px;background:var(--bg);padding:0 12px;font-family:monospace;font-size:10px;color:var(--amber);letter-spacing:4px}
+.clue{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin:6px 0;font-size:15px;line-height:1.7;color:#a09888;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.clue .clue-tag{display:inline-block;font-family:monospace;font-size:9px;padding:1px 6px;margin-right:6px;border-radius:2px}
+.clue-tag.yes{background:rgba(100,160,100,0.15);color:#7ab87a}
+.ask-box{display:flex;gap:8px;margin-bottom:8px}
+.ask-inp{flex:1;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:12px 16px;font-size:16px;font-family:inherit;outline:none}
+.btn-s{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:12px 20px;font-family:monospace;font-size:12px;cursor:pointer;white-space:nowrap}
+.btn-s:hover{border-color:var(--amber);color:var(--amber)}
+.guess-box{display:flex;gap:8px;margin:8px 0}
+.guess-inp{flex:1;background:var(--input-bg);border:1px solid var(--dim-amber);color:var(--amber);padding:12px 16px;font-size:16px;font-family:inherit;outline:none}
+.btn-g{background:transparent;border:1px solid var(--amber);color:var(--amber);padding:12px 20px;font-family:monospace;font-size:12px;cursor:pointer;white-space:nowrap}
+.reveal{background:var(--card);border:1px solid var(--dim-amber);padding:20px 22px;margin-top:14px;font-size:17px;line-height:1.9;color:var(--soup-text);display:none}
+.reveal::before{content:'汤 底';display:block;font-family:monospace;font-size:10px;color:var(--amber);letter-spacing:4px;margin-bottom:8px}
+.btn-n{display:block;width:100%;background:transparent;border:1px solid var(--amber);color:var(--amber);padding:14px;font-family:monospace;font-size:13px;letter-spacing:4px;cursor:pointer;margin-top:8px}
+.btn-n:hover{background:rgba(212,160,64,0.1)}
+.btn-h{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:8px 18px;font-family:monospace;font-size:11px;cursor:pointer;margin-top:8px}
+.btn-h:hover{border-color:var(--amber);color:var(--amber)}
+.qbtn{background:var(--card);border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;font-size:14px;font-family:inherit;cursor:pointer;border-radius:4px;transition:all .2s;text-align:left}
+.qbtn:hover{border-color:var(--amber);color:var(--amber);background:rgba(212,160,64,0.06)}
+.qbtn.used{opacity:0.3;pointer-events:none;text-decoration:line-through}
+.progress{font-family:monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px}
+.no-match{font-size:13px;color:var(--text-dim);font-style:italic;margin:8px 0}
+.wrong{font-size:14px;color:var(--text-dim);margin:6px 0}
+.pbar{position:fixed;bottom:0;left:0;width:100%;height:2px;background:var(--border);z-index:10}
+.pfill{height:100%;background:var(--amber);transition:width .5s}
+.complete{display:none;text-align:center;padding-top:40px}
+</style></head><body>
+<div id="app">
+<div class="scr" id="ns">
+<div style="font-family:monospace;font-size:10px;color:var(--text-dim);letter-spacing:6px">W I N D E N</div>
+<div class="title">暗 黑</div>
+<div style="font-family:monospace;font-size:13px;color:var(--text-dim);letter-spacing:6px">—— D A R K ——</div>
+<div style="font-size:14px;color:var(--text-dim);line-height:2;max-width:440px">
+你是温登镇的一名居民。最近孩子们开始失踪。乌鸦洞发出奇怪的声音。<br>有些事情不对劲。你知道的——虽然说不清楚。
+</div>
+<button class="btn" id="btnGo">走进迷雾</button>
+</div>
+
+<div class="gm" id="gm">
+<div class="progress"><span id="pt"></span> <span id="pl"></span></div>
+<div style="text-align:center;margin-bottom:28px">
+<div style="font-family:monospace;font-size:11px;color:var(--text-dim);letter-spacing:3px;margin-bottom:6px" id="pnum"></div>
+<div style="font-size:20px;color:var(--amber);letter-spacing:3px;font-weight:700" id="ptitle"></div>
+</div>
+<div class="bowl" id="bowl"></div>
+<div><div style="font-family:monospace;font-size:11px;color:var(--text-dim);letter-spacing:3px;margin-bottom:12px">▸ 你的调查记录</div>
+<div id="clues"></div>
+<div id="qBtns" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+<div class="ask-box"><input class="ask-inp" id="askInp" placeholder="或者在这里打字提问..."><button class="btn-s" id="btnAsk">提问</button></div>
+<div id="noMatch"></div></div>
+<div><div style="font-family:monospace;font-size:11px;color:var(--amber);letter-spacing:3px;margin-bottom:8px">▸ 你猜到了汤底吗？</div>
+<div class="guess-box"><input class="guess-inp" id="guessInp" placeholder="输入你的猜测..."><button class="btn-g" id="btnGuess">提交汤底</button></div>
+<div id="wrongMsg"></div>
+<button class="btn-h" id="btnHint">▸ 需要一个提示</button>
+<button class="btn-h" id="btnReveal" style="margin-left:8px">▸ 查看汤底</button></div>
+<div class="reveal" id="reveal"></div>
+<button class="btn-n" id="btnNext" style="display:none">下一碗汤 ▸</button>
+<button class="btn-n" id="btnPrev" style="display:none">◂ 上一碗汤</button></div>
+
+<div class="complete" id="cs">
+<div style="font-size:28px;color:var(--amber);letter-spacing:6px;font-weight:700;margin-bottom:12px">时间循环已显露</div>
+<div style="font-size:13px;color:var(--text-dim);font-family:monospace;letter-spacing:3px;margin-bottom:28px">你看到了温登的全部</div>
+<div class="bowl" id="statsBox" style="color:#c8c0b0"></div>
+<button class="btn" id="btnRe" style="border-color:var(--border);color:var(--text-dim);font-size:12px;letter-spacing:4px;padding:12px 32px">重新走进迷雾</button></div></div>
+<div class="pbar"><div class="pfill" id="pf"></div></div>
+
+<script>
+//============================= DATA =============================
+var P=[];
+P.push({n:'第〇碗汤',t:'森林中的男孩',s:'<p>2019年11月4日,傍晚。</p><p>温登高中的学生米克尔·尼尔森在森林里失踪了。他的父亲乌利希是镇上的警察,连夜组织了搜索队。他们在乌鸦洞口附近找到了米克尔的背包——但没有任何脚印延伸进洞穴。</p><p>第二天清晨,一具男孩的尸体出现在森林里。法医鉴定:死亡时间不超过12小时。他的穿着打扮像是80年代的人。</p><p>奇怪的是——这个男孩的眼睛和米克尔一模一样。但DNA比对显示他不是米克尔。</p>',
+clues:[
+{q:'这个男孩为什么穿着80年代的衣服?',kw:'衣服 80 年代 穿着',a:'yes',ans:'是的,他确实穿着1980年代的衣服。这暗示他来自另一个时间。'},
+{q:'他是通过洞穴穿越过来的吗?',kw:'洞穴 穿越 时间旅行 时间',a:'yes',ans:'是的。乌鸦洞是温登的时间通道——在特定条件下,人可以穿越到33年前或后的时间。'},
+{q:'他认识米克尔吗?',kw:'米克尔 认识 关系',a:'yes',ans:'他们之间有血缘关系。实际上——他是米克尔的儿子。'},
+{q:'他的父亲是谁?',kw:'父亲 爸爸 谁的孩子',a:'yes',ans:'他的父亲是米克尔·尼尔森。是的——米克尔是他的父亲,但米克尔此时只有12岁。'},
+{q:'他是从未来来的?',kw:'未来 33年',a:'yes',ans:'是的。他来自2052年——米克尔穿越到1986年后长大成人,结婚生下了他。'},
+{q:'米克尔还活着吗?',kw:'米克尔 活着 还活着',a:'yes',ans:'他还活着——但不在2019年。他穿越到了1986年,被困在了那里。'},
+{q:'这件事和核电站有关吗?',kw:'核电站 辐射 电厂',a:'yes',ans:'有关。核电站的冷却塔下方储存着放射性废料——这些废料和洞穴中的上帝粒子产生了反应。'},
+{q:'这是第一起失踪案吗?',kw:'第一起 第一次 之前',a:'no',ans:'不是。在米克尔之前,镇上已经失踪了至少两个孩子——埃里克和亚辛。还有1986年的玛兹。'},
+{q:'凶手是同一个人吗?',kw:'凶手 杀 谋杀 犯罪',a:'no',ans:'不是传统意义上的凶手。这些死亡和时间旅行实验有关——孩子们被用作时间机器的测试对象。'},
+{q:'森林里有什么特殊的东西?',kw:'森林 洞穴 乌鸦 特殊',a:'yes',ans:'乌鸦洞的深处有一条通道——连接着三个不同的时间:1953年、1986年和2019年。每33年开启一次。'},
+],ans:'这个男孩不是来自2019年——他来自2052年。他是米克尔·尼尔森的儿子。米克尔在2019年失踪后穿越到1986年,在那里长大成人,改名为米夏埃尔·卡恩瓦尔德,和汉娜结婚,生下了这个男孩——<b>乔纳斯·卡恩瓦尔德</b>。乔纳斯为了寻找父亲也穿越了时间,自己就是那个穿着80年代衣服的男孩。'});
+
+P.push({n:'第二碗汤',t:'陌生人的信',s:'<p>一个陌生人住在镇上的旅馆里。他从来不摘帽子,用围巾遮住下半张脸。他出现在每一个关键地点——米克尔失踪的森林、乌鸦洞口、核电站附近。</p><p>一天夜里,他敲开了一个男孩的房门,递给他一封信。信上只有一行字:</p><p><em>"不要相信任何人。包括我。——乔纳斯"</em></p>',
+clues:[
+{q:'这个陌生人是未来的乔纳斯吗?',kw:'未来 乔纳斯 穿越',a:'yes',ans:'是的。这个陌生人就是乔纳斯本人——来自2052年,33年后的未来。'},
+{q:'他为什么回到2019年?',kw:'为什么 目的 回来 原因',a:'yes',ans:'他回到2019年试图阻止时间循环——阻止米克尔的失踪,阻止父亲的自杀。但每一次尝试都让时间线更固化。'},
+{q:'那封信是真的吗?',kw:'信 真的 真假',a:'yes',ans:'是的。那封信是他写给少年乔纳斯的——他回到自己16岁时试图警告自己。'},
+{q:'他成功阻止米克尔的失踪了吗?',kw:'成功 阻止 米克尔 失踪',a:'no',ans:'没有。他的行动正是导致米克尔跑进森林的原因。越想改变,越是循环的一部分。'},
+{q:'他知道凶手是谁吗?',kw:'凶手 谁杀的 谋杀',a:'yes',ans:'他知道。时间旅行实验是被诺亚执行的——诺亚为亚当工作。而亚当正是更年老的乔纳斯本人。'},
+{q:'这个循环从什么时候开始的?',kw:'开始 循环 什么时候 起源',a:'yes',ans:'时间循环的真正起源是1888年钟表匠坦豪斯为了复活自己死去的儿子而制造了原始时间机器。'},
+{q:'他能离开温登吗?',kw:'离开 出去 温登 逃脱',a:'no',ans:'不能。温登是一个时间闭环——所有试图离开的人最终都会被时间拽回来。'},
+{q:'他脸上有伤疤吗?',kw:'脸 伤疤 容貌 毁容',a:'yes',ans:'是的。他的脸上和脖子上有严重的伤痕——是多次时间旅行中辐射烧伤的结果。'},
+],ans:'这个陌生人是<b>成年乔纳斯</b>——来自2052年。他穿越回2019年试图阻止悲剧循环。但讽刺的是:他的每一次干预都在无意中确保了时间线按既定轨迹运行。他给少年乔纳斯的警告信没有阻止任何事——只是让少年乔纳斯更早地踏上了成为陌生人的道路。'});
+
+P.push({n:'第三碗汤',t:'小镇牧师的笔记本',s:'<p>镇上来了一个新牧师,叫诺亚。他总是穿黑色大衣,说话轻声细语,眼神令人不寒而栗。他在教堂地下室里藏了一本笔记本——上面写着几十个人名和日期。</p><p>每一个名字旁边都标注了一个日期。你仔细看——<em>每一个日期都在未来。</em></p><p>而且,每一个被写下名字的人都在标注的日期那天死了。</p>',
+clues:[
+{q:'诺亚是来自未来的人吗?',kw:'诺亚 未来 穿越 时间旅行',a:'yes',ans:'是的。诺亚来自2041年——他是一个叫亚当的组织派来的,专门在三个时间线之间穿梭。'},
+{q:'这本笔记本记录了所有要死的人?',kw:'笔记本 记录 名单 要死',a:'yes',ans:'是的。笔记本记录的是循环中每个人物的死亡日期——这些不是预言,而是已知历史。诺亚来自未来,他知道一切。'},
+{q:'诺亚是凶手吗?',kw:'诺亚 凶手 杀人',a:'yes',ans:'部分的。诺亚亲手杀死了几名少年作为实验对象。但他按照笔记本上提前写好的计划执行。'},
+{q:'他为什么要杀这些孩子?',kw:'为什么 杀孩子 动机 原因',a:'yes',ans:'诺亚相信自己在做上帝的工作。他被亚当洗脑——亚当告诉他只有通过这些死亡才能打破循环。但他被骗了。'},
+{q:'写笔记本的人是谁?',kw:'笔记本 谁写的',a:'yes',ans:'笔记本是循环中不断传递的——它的原始作者已无法确定。诺亚从克劳迪娅那里得到的。笔记本本身就是一个时间悖论。'},
+{q:'诺亚最后的命运是什么?',kw:'命运 结局 死',a:'yes',ans:'诺亚最终被自己的妹妹——也是他的妻子——伊丽莎白用枪打死了。临死前才意识到一生都被亚当欺骗。笔记本上最后一个日期是他自己的。'},
+],ans:'诺亚是亚当的时间旅人行刑者。他在三个时间线之间穿梭,按照一本早已写好的笔记本执行暗杀。他的笔记本不是预言——是<b>事后的记录</b>。因为诺亚来自未来,他知道每一个人会什么时候死。但他不知道的是——笔记本上最后一个名字,是他自己。'});
+
+P.push({n:'第四碗汤',t:'1986年的男孩',s:'<p>1986年。温登警察局接到报案:一个从未见过的男孩在森林里游荡。他没有证件,说话方式很陌生,对周围的一切感到困惑。</p><p>警官伊根·蒂德曼收留了他。男孩说他叫米克尔,来自温登。但伊根查遍了户籍——温登没有一个叫米克尔的男孩。更诡异的是:米克尔描述的家,在1986年根本不存在。</p><p>米克尔在1986年长大了。他改了名字——<em>米夏埃尔·卡恩瓦尔德</em>。他和一个叫汉娜的女孩结了婚。</p>',
+clues:[
+{q:'米克尔是2019年失踪的那个男孩吗?',kw:'2019 失踪',a:'yes',ans:'是的。2019年11月,米克尔在森林里追踪人影时跌入洞穴,穿越到了33年前的1986年。'},
+{q:'他为什么改名字?',kw:'改名 米夏埃尔 卡恩瓦尔德',a:'yes',ans:'因为没有人相信他来自未来。他被一户姓卡恩瓦尔德的护士家庭收养。为了在这个时代活下去他必须改名。'},
+{q:'汉娜知道他的真实身份吗?',kw:'汉娜 知道 真实身份',a:'yes',ans:'不知道——至少一开始不知道。汉娜只是爱上了一个安静的总是画画的男孩。多年后才发现日记。'},
+{q:'米克尔尝试过回去吗?',kw:'回去 回到 2019 回家',a:'yes',ans:'他试过。但他被困在了1986年。时间通道不是随时可以用的——他等了很久都没有等到回去的时机。'},
+{q:'他后来怎么样了?',kw:'后来 结局 死',a:'yes',ans:'米克尔——也就是米夏埃尔——在2019年夏天自杀了。他的儿子乔纳斯在阁楼上发现了他写给自己的信。信上说:"你不应该存在于这个世界上。原谅我。"'},
+],ans:'米克尔就是米夏埃尔·卡恩瓦尔德。2019年失踪后他穿越到1986年,在那里长大、结婚、生下了乔纳斯。然后在2019年夏天——也就是乔纳斯16岁的时候——他<b>自杀了</b>。因为在同一时刻,他看到了12岁的自己从森林里跑出来。他无法承受这个悖论。'});
+
+P.push({n:'第五碗汤',t:'核电站的秘密',s:'<p>温登核电站。站长克劳迪娅·蒂德曼是一个短发、烟不离手的女人。1986年,她开始注意到冷却塔下方的异常读数。</p><p>然后她发现了地下掩体中封存的放射性废料——<em>黄色的铁桶,上面标注着不属于这个时代的符号。</em>当她触碰其中一个铁桶时,她看到了不可能的画面:她自己,在一个没有去过的房间里,和一群不认识的人说话。</p><p>那是未来。33年后的未来。</p>',
+clues:[
+{q:'上帝粒子存在于核电站下方吗?',kw:'上帝粒子 核电站 下方',a:'yes',ans:'是的。放射性废料和洞穴中的时间裂缝产生反应,在冷却塔下方形成了不稳定的上帝粒子——一种扭曲时空的物质。'},
+{q:'克劳迪娅是第一个发现时间旅行的人吗?',kw:'第一个 发现 克劳迪娅',a:'yes',ans:'在温登时间旅行的探索者中克劳迪娅是最接近真相的人。她比任何人都更早理解循环的本质。'},
+{q:'她后来变成白恶魔了吗?',kw:'白恶魔 白头发 另一个',a:'yes',ans:'对。多年后克劳迪娅变成满头白发的老妇人——被亚当称为白恶魔。她一直在暗中对抗亚当。'},
+{q:'克劳迪娅是好人还是坏人?',kw:'好人 坏人 善 恶',a:'irrelevant',ans:'不是好人也不是坏人。克劳迪娅是科学家——她的目标是找到真相。有时不惜牺牲别人,但最终她找到了打破循环的方法。'},
+{q:'她女儿是谁?',kw:'女儿 孩子 雷吉娜',a:'yes',ans:'她的女儿是雷吉娜·蒂德曼——那个在2019年患上癌症的酒店老板娘。克劳迪娅为了救她在循环里挣扎了无数轮回。'},
+],ans:'克劳迪娅·蒂德曼是温登时间循环中最关键的人物。她发现了核电站下方的上帝粒子,花了33年研究时间旅行,最终发现了<b>第三个世界</b>——一个没有时间旅行的原始世界,那里的循环真正起源。她是唯一找到打破循环方法的人。'});
+
+P.push({n:'第六碗汤',t:'伊根警长的最后一天',s:'<p>1987年。伊根·蒂德曼——那个曾收留过小米克尔的警官——已经老了。他一生都在调查无法解释的案件:孩子失踪、尸体出现却无法确认身份。</p><p>在他死前的那天晚上,他接到报警电话:有人在森林里斗殴。他去了。他在森林里看到一个白发苍苍的老女人——他几乎认不出她。</p><p><em>那是他的女儿,克劳迪娅。</em>但克劳迪娅已经失踪了30多年。她的样子——像八十岁。比伊根还老。他还来不及开口,就被人从背后击中头部,倒地身亡。</p>',
+clues:[
+{q:'杀死伊根的人是谁?',kw:'凶手 杀 谁',a:'yes',ans:'是乌利希·尼尔森。来自2020年穿越到1953年的乌利希。他在精神病院关了34年后于1987年逃了出来——在混乱中砸死了伊根。'},
+{q:'伊根认出克劳迪娅了吗?',kw:'认出 克劳迪娅 女儿',a:'yes',ans:'他在临死前认出来了。他看到了那双眼睛——和他妻子多丽丝一模一样的眼睛。那是他最后一次看到自己的女儿。'},
+{q:'伊根的死和循环有关吗?',kw:'循环 命运 注定',a:'yes',ans:'是的。伊根的死是循环的一部分——他的死亡导致克劳迪娅更早开始研究时间旅行。命运用伊根的死推动了女儿。'},
+{q:'克劳迪娅当时在做什么?',kw:'克劳迪娅 做什么 为什么在森林',a:'yes',ans:'克劳迪娅当时正在进行一次时间穿越——她在向父亲告别。她知道他今晚会死,无法阻止,但想让他最后看到自己。'},
+],ans:'伊根·蒂德曼死于乌利希·尼尔森之手——一个被循环困住34年的男人。但在死前,他看到了失踪30多年的女儿克劳迪娅。她的白发在月光下像雪——<b>她来自未来,向父亲告别。</b>克劳迪娅不是凶手——她只是时间的见证者。'});
+
+P.push({n:'第七碗汤',t:'赫尔格与石头',s:'<p>1953年。赫尔格·多普勒是一个瘦弱的小男孩。他经常被镇上的大孩子欺负——他们嘲笑他是傻子赫尔格。一天傍晚他被一群孩子追赶逃到森林里。在乌鸦洞口,一个浑身是血的男人抓住了他。那个人嘴里念叨着他听不懂的话。<em>然后那人举起一块石头狠狠砸在赫尔格头上。</em>赫尔格倒在血泊里。</p>',
+clues:[
+{q:'袭击赫尔格的人是乌利希吗?',kw:'乌利希 袭击 石头',a:'yes',ans:'是的。乌利希·尼尔森从2019年穿越到1953年试图杀死年幼的赫尔格。他错误地认为赫尔格长大后是杀害孩子们的凶手。'},
+{q:'赫尔格死了吗?',kw:'死 活 没死',a:'no',ans:'没有。赫尔格大脑受到严重损伤。更沉默更孤僻了。这件事正是他后来被诺亚操控的根源。'},
+{q:'赫尔格长大后真的成了凶手吗?',kw:'凶手 杀 犯罪',a:'yes',ans:'是的——但不是自愿的。受伤后的赫尔格被诺亚利用成为时间旅行实验的帮凶。他一生都在为这些死亡赎罪。'},
+{q:'乌利希的袭击改变了历史吗?',kw:'改变 历史 影响',a:'no',ans:'没有——这是时间循环最可怕之处。乌利希试图杀死赫尔格来拯救孩子,但他的袭击正是赫尔格变成帮凶的原因。他创造了那个他想杀死的凶手。'},
+],ans:'乌利希·尼尔森——那个在2019年失去儿子的父亲——穿越到1953年试图杀死年幼的赫尔格来改变未来。但正是他的袭击,<b>让赫尔格脑部受损,变成了一个容易被操控的人</b>,最终被诺亚洗脑成为帮凶。乌利希亲手创造了他想要阻止的悲剧。'});
+
+P.push({n:'第八碗汤',t:'两个世界的女孩',s:'<p>2053年。一个小女孩在末日后的废墟中长大。她不会说话——只会用手语。她的名字叫伊丽莎白·多普勒。在这个被摧毁的世界里她遇到了一个男人。他教她读书写字生存。</p><p>那个男人叫诺亚。他们相爱了。伊丽莎白生了一个女儿——<em>夏洛特。</em>但就在女儿出生后不久,有人偷走了这个婴儿。偷走她的人——是一个白发苍苍的老女人。她把婴儿放进了一台机器。</p>',
+clues:[
+{q:'婴儿夏洛特被送到了哪里?',kw:'送到 哪 婴儿',a:'yes',ans:'她被送到了1953年——被坦豪斯夫妇收养。所以夏洛特在1953年长大,成为那个时代的警察妻子和母亲。'},
+{q:'夏洛特和伊丽莎白是什么关系?',kw:'夏洛特 伊丽莎白 关系 母女',a:'yes',ans:'她们是母女——同时也是一个时间悖论:夏洛特是伊丽莎白的女儿,而伊丽莎白也是夏洛特的女儿。两个人互为母女。'},
+{q:'偷走婴儿的老女人是谁?',kw:'老女人 偷 白发',a:'yes',ans:'是克劳迪娅·蒂德曼——也就是白恶魔。她偷走夏洛特是为了完成时间循环的闭合。'},
+{q:'诺亚知道谁偷了他的女儿吗?',kw:'诺亚 知道 偷',a:'yes',ans:'他知道——但找错了方向。他一直以为是亚当,为此誓死复仇。临死前才明白:不是亚当,是克劳迪娅。'},
+],ans:'夏洛特和伊丽莎白是一对<b>互为母女的悖论</b>。伊丽莎白生了夏洛特,夏洛特被送到1953年,长大后生了伊丽莎白。这个封闭循环,是时间悖论最极致的体现——也是克劳迪娅最终决定打破循环的原因之一。'});
+
+P.push({n:'第九碗汤',t:'亚当的脸',s:'<p>时光深处有一个老人坐在旧木椅上。他的皮肤像被火烧过,满脸疤痕,扭曲到几乎看不出人形。所有人都叫他亚当。他领导着一个秘密组织,在三个时代之间编织着一张看不见的网。他声称自己在做上帝的工作——<em>拯救所有人。</em></p><p>诺亚为他杀人。赫尔格为他绑架孩子。没有人知道面具下面是谁。</p>',
+clues:[
+{q:'亚当是乔纳斯本人吗?',kw:'亚当 乔纳斯 本人 老年',a:'yes',ans:'是的。亚当就是乔纳斯·卡恩瓦尔德——来自比陌生人更遥远的未来。在无数次循环中衰老烧伤扭曲成了冷血的操纵者。'},
+{q:'他为什么变成这样?',kw:'为什么 变成 烧伤 脸',a:'yes',ans:'在无数次时间旅行中他的身体被辐射和上帝粒子严重烧伤。但比身体更扭曲的是他的心——经历了无数次失败后他相信唯一的出路是让循环"完成"。'},
+{q:'亚当的目标是打破循环吗?',kw:'目标 打破 循环',a:'no',ans:'不是——他自己不相信可以打破。亚当的目标是彻底摧毁原始世界——那个没有时间旅行的真实坦豪斯的世界。但他错了。'},
+{q:'他成功了吗?',kw:'成功 结局',a:'no',ans:'没有。在最后一刻他被克劳迪娅揭示的真相动摇了:循环外还有一个循环——在第三个世界里真正答案不是毁灭而是阻止起源。'},
+],ans:'亚当就是<b>乔纳斯·卡恩瓦尔德</b>——来自未来的老年乔纳斯。他在无数次循环中变得冷酷扭曲,坚信毁灭是唯一出路。但直到最后他才知道:他和白恶魔克劳迪娅,一直在两个错误的方案里互相消耗——而真正的答案在第三个世界。'});
+
+P.push({n:'第十碗汤',t:'钟表匠的悲伤',s:'<p>1888年。坦豪斯是一个钟表匠。他的儿子马雷克和儿媳在一场车祸中去世。<em>桥塌了。他们都死了。</em></p><p>坦豪斯崩溃了。他花了后半生造了一台机器——<em>一台可以穿越时间的机器。</em>他相信只要能回到那个夜晚,在桥倒塌之前拦住马雷克的车——一切都可以重来。他按下了按钮。机器启动了。</p>',
+clues:[
+{q:'这台机器是时间旅行的起源吗?',kw:'起源 机器 时间旅行 开始',a:'yes',ans:'是的。坦豪斯的机器撕裂了时空,创造了一个叠加在真实世界之上的循环世界——温登的时间循环就从这个瞬间开始。'},
+{q:'马雷克复活了吗?',kw:'复活 马雷克 儿子 活',a:'no',ans:'没有。坦豪斯没有复活儿子——相反他创造了一个全新的扭曲世界。他的悲伤化成了温登:一个永远困在循环中的小镇。'},
+{q:'打破循环的方法是什么?',kw:'打破 循环 方法 停止',a:'yes',ans:'打破循环的方法是回到1888年在坦豪斯启动机器之前拦住他。不是毁灭而是阻止起源。乔纳斯和玛莎最终做到了。'},
+{q:'坦豪斯知道自己的机器造成了什么吗?',kw:'知道 后果 温登',a:'no',ans:'他从来没有真正理解。他只是想复活儿子。不知道他的悲伤会蔓延成两个世界困住无数人跨越165年。'},
+],ans:'坦豪斯是一个不想接受儿子死亡的钟表匠。他制造的时间机器是<b>一切循环的起源</b>。他的悲伤撕裂了现实创造了两个纠缠的温登世界。打破循环的唯一方法——是回到1888年,在坦豪斯启动机器之前,让他放下。'});
+
+P.push({n:'第十一碗汤',t:'伊娃的世界',s:'<p>玛莎·尼尔森——米克尔失踪的那个夜晚她也在森林里。但她看到的乔纳斯不是她认识的那个。这个乔纳斯更年轻眼神更明亮。</p><p>他对她说:"你不是这个世界的玛莎。"她不明白——直到被吸入一个完全不同的温登。在这个温登里乔纳斯从未出生。米克尔没有失踪。<em>但这个世界也有自己的循环。</em>这里的循环由玛莎自己主导。</p>',
+clues:[
+{q:'存在平行世界吗?',kw:'平行 世界 两个',a:'yes',ans:'是的。坦豪斯的机器创造了两个纠缠的循环世界:一个是亚当(乔纳斯)的世界,一个是伊娃(玛莎)的世界。互为镜像互相纠缠。'},
+{q:'伊娃世界的玛莎是谁?',kw:'伊娃 玛莎 身份',a:'yes',ans:'伊娃世界的玛莎在这个世界里成为了时间旅行的主导者——就像亚当世界里的乔纳斯。老去后被称为伊娃。'},
+{q:'两个世界能相互影响吗?',kw:'影响 联系 交叉',a:'yes',ans:'可以。两个世界在某些节点会交叉。它们的命运绑在一起:一个世界的循环不打破另一个也无法解脱。'},
+{q:'玛莎和乔纳斯的关系是什么?',kw:'玛莎 乔纳斯 关系 爱',a:'yes',ans:'在亚当的世界里玛莎是乔纳斯的爱人。在伊娃的世界里他们也彼此深刻羁绊。但他们的爱情是循环的产物——维系着两个世界。'},
+],ans:'在坦豪斯启动机器时分裂出了<b>两个纠缠的循环世界</b>。一个是亚当(乔纳斯)主导的世界,一个是伊娃(玛莎)主导的世界。打破循环意味着两个世界的乔纳斯和玛莎都无法出生。'});
+
+P.push({n:'第十二碗汤',t:'起源的孩子',s:'<p>在亚当和伊娃的两个世界之间存在一个裂缝。一个既不属于亚当也不属于伊娃的孩子在裂缝中诞生了。他没有名字——在循环中被抹去了。人们只叫他无名者。</p><p><em>他是两个世界联姻的产物。</em>伊娃世界的玛莎和亚当世界的乔纳斯在裂缝中相遇,产生了一个孩子。这个孩子被送到1888年,成为了时间旅行组织的创始人。</p>',
+clues:[
+{q:'无名者是乔纳斯和玛莎的孩子吗?',kw:'乔纳斯 玛莎 孩子 无名者',a:'yes',ans:'是的。他是两个世界联姻的产物——同时属于两个世界又不属于任何一个。'},
+{q:'他造成了什么?',kw:'造成 后果 影响',a:'yes',ans:'他是时间旅行组织的原始创始人——他的后代就是温登的四大家族:尼尔森、多普勒、蒂德曼、卡恩瓦尔德。整个温登悲剧都起源于他。'},
+{q:'能不能阻止他的诞生?',kw:'阻止 诞生 不让他出生',a:'yes',ans:'可以。这正是克劳迪娅发现的方法:阻止乔纳斯和玛莎在裂缝中相遇,两个循环世界就会消失。'},
+{q:'乔纳斯和玛莎愿意这样做吗?',kw:'愿意 放弃 牺牲',a:'yes',ans:'愿意。当他们理解真相后选择了牺牲。回到1888年阻止裂缝中的相遇。意味着他们的孩子和他们都将不复存在。'},
+],ans:'无名者是<b>两个世界乔纳斯和玛莎的孩子</b>。他的诞生是温登一切悲剧的连锁起点。打破循环的唯一方法是阻止他的诞生,消灭两个虚构的循环世界,让坦豪斯的真实世界重新成为唯一的世界。'});
+
+P.push({n:'第十三碗汤',t:'克劳迪娅的真相',s:'<p>克劳迪娅花了33年研究时间循环。她穿越了无数次记录了每个人的命运。她发现了一件所有人——包括亚当和伊娃——都不知道的事:</p><p><em>循环世界之外还有一个原始世界。</em>在这个世界里坦豪斯的儿子马雷克没有死在桥上。温登只是一个普通的德国小镇。没有时间旅行。<em>这个原始世界从未被摧毁——它一直在那里被两个循环世界遮蔽了。</em></p>',
+clues:[
+{q:'原始世界还存在吗?',kw:'原始世界 存在 还在',a:'yes',ans:'是的。原始世界从未毁灭。坦豪斯的机器没有摧毁真实世界——只是在真实世界上叠加了两个虚构的循环世界。'},
+{q:'这个发现是克劳迪娅独有的吗?',kw:'克劳迪娅 发现 独有 秘密',a:'yes',ans:'对。亚当不知道。伊娃不知道。只有克劳迪娅在无数次循环中独自发现并在生命的最后交给了亚当。'},
+{q:'克劳迪娅为什么要告诉亚当?',kw:'告诉 亚当 为什么',a:'yes',ans:'因为她知道自己快死了。她需要能执行最终方案的人——而讽刺的是,这个人只能是她的死对头亚当。'},
+{q:'最终方案是什么?',kw:'方案 计划 打破循环',a:'yes',ans:'乔纳斯和玛莎回到1888年,阻止坦豪斯启动机器——不是通过暴力而是通过理解。让他放下悲伤。'},
+],ans:'克劳迪娅是唯一发现<b>原始世界</b>存在的人。在循环最后她把真相交给了亚当——她毕生的对手。亚当带着真相找到少年乔纳斯:"去吧。做我永远做不到的事。阻止循环。在一切开始之前。"'});
+
+P.push({n:'第十四碗汤',t:'终局——坦豪斯的门口',s:'<p>1888年。暴雨。乔纳斯和玛莎站在坦豪斯的家门前。他们刚从1986年被传送过来——身上还带着另一个时代的气息。他们知道一旦走进这扇门,可能永远不会再见面。</p><p>玛莎说:<em>"如果我阻止了你和我相遇,我们的孩子就不会出生。两个世界就会消失。"</em></p><p>乔纳斯说:"我们也不会出生。我们的温登——从来就没有存在过。"</p><p>玛莎哭了。然后她笑了。她说:<em>"那我们至少给真实世界留点什么吧。真实的人,真实的雨,真实的光。"</em></p>',
+clues:[
+{q:'他们成功了吗?',kw:'成功 打破 停止 循环结束',a:'yes',ans:'成功了。乔纳斯和玛莎阻止了最初的会面——在被引力吸引到裂缝中之前把坦豪斯的儿子马雷克叫了回来。马雷克没有经过那座桥。坦豪斯没有制造机器。两个循环世界在雨中消散。'},
+{q:'他们还活着吗?',kw:'活着 消失 死',a:'no',ans:'没有。当循环被打破——乔纳斯和玛莎从未出生。他们在雨中消散了。但真实世界里坦豪斯的马雷克安全到家了。餐桌上有汤。窗外——只有雨。'},
+{q:'坦豪斯知道这一切吗?',kw:'坦豪斯 知道 记得',a:'no',ans:'不知道。他只是松开螺丝刀走向儿子——心中有一种说不清的感激。好像有人在对他微笑。好像有人在说:去吧,够了。'},
+],ans:'乔纳斯和玛莎<b>阻止了最初的时间机器。</b>两个循环世界随之消失。在真实世界的温登,雨停了。坦豪斯的儿子安全到家。餐桌上有汤。而在循环最后一刻,少年乔纳斯对着虚空微笑了一下——不是遗憾,是<b>平静</b>。有些爱,不需要存在过才能被记得。'});
+
+P.push({n:'第十五碗汤',t:'消失在时间中的女人',s:'<p>汉娜·卡恩瓦尔德——乔纳斯的母亲。2019年她是一个安静的女人,丈夫自杀,儿子失踪。但真相是:她从来不是一个被动的受害者。</p><p>在中年时她发现了时间旅行的秘密,偷偷穿越到了1953年。在那里她遇到了年轻的乌利希·尼尔森——<em>那个她暗恋了一辈子的男人。</em>她以陌生人的身份和他交往,生了一个孩子。然后被诺亚发现,被杀在1954年的森林里。</p>',
+clues:[
+{q:'汉娜知道乔纳斯的真实身份吗?',kw:'乔纳斯 真实身份 知道',a:'yes',ans:'是的。她在乔纳斯的房间发现了日记,知道了丈夫的真实身份。'},
+{q:'汉娜在1953年做了什么?',kw:'1953 穿越 做了什么',a:'yes',ans:'她穿越到1953年假装成另一个人和年轻的乌利希发生了关系。她生下了女儿西尔贾。西尔贾后来被送到2053年成为了伊丽莎白的伴侣。'},
+{q:'汉娜是自愿穿越的吗?',kw:'自愿 选择 穿越',a:'yes',ans:'是的。汉娜不是意外进入的——她主动找到了时间机器做出了自己的选择。她是循环中少数不是因为命运而穿越的人——她穿越是因为她的欲望。'},
+],ans:'汉娜·卡恩瓦尔德不是一个被时间循环碾压的牺牲品。她穿越到1953年找到了暗恋一辈子的乌利希,生下了女儿西尔贾。然后被诺亚所杀。但她的女儿活了下来——西尔贾成了伊丽莎白在末日中的伴侣,两人的后代最终成为温登四大家族之一。'});
+
+P.push({n:'第十六碗汤',t:'彼得的秘密',s:'<p>彼得·多普勒——温登的心理医生。2019年他总是神情紧张,藏着不可告人的秘密。他每天都去森林里一个废弃的地堡。</p><p>地堡里有一把椅子。一把可以翻转的带有金属锁扣的椅子。旁边有旧电视——播放着一个男孩死去的画面。彼得跪在椅子前祈祷。他不是去看——<em>他是在等待。</em></p>',
+clues:[
+{q:'地堡里的椅子是时间机器的实验台吗?',kw:'椅子 实验台 时间机器 地堡',a:'yes',ans:'是的。这是诺亚设置的原始时间机器——洞穴中上帝粒子稳定点的延伸。孩子们被绑在椅子上测试穿越效果。'},
+{q:'彼得为什么会出现在那里?',kw:'彼得 为什么 原因 等待',a:'yes',ans:'彼得在2019年就发现了这个地堡。他在那里看到了从1986年传送来的玛兹的尸体。从那天起他每天都在等待。'},
+{q:'彼得的父亲是谁?',kw:'父亲 赫尔格 多普勒',a:'yes',ans:'彼得的父亲是赫尔格·多普勒——那个被诺亚操控的男人。彼得不知道父亲的秘密。但他直觉地感受到了黑暗并试图对抗。'},
+{q:'彼得成功救过任何人吗?',kw:'救 成功 帮助',a:'yes',ans:'是的。一个叫西尔贾的女孩从2053年被传送来——彼得救了她,带她离开地堡给了她新的身份。'},
+],ans:'彼得·多普勒是无意中闯入时间循环的观察者。他的父亲赫尔格是诺亚的帮凶,但他选择了相反的路——<b>等待并拯救</b>。他救下了西尔贾,间接维系了整个循环的链条。'});
+
+P.push({n:'第十七碗汤',t:'乌利希的困局',s:'<p>2019年乌利希·尼尔森是一个愤怒的父亲。儿子米克尔失踪了,婚姻在崩溃。他闯入乌鸦洞被一个黄色铁桶吞噬——醒来时躺在1953年的森林里。</p><p>他以为自己找到了救儿子的方法:杀死年幼的赫尔格。他在地上捡起石头,狠狠砸下去。</p><p>但赫尔格没有死。乌利希被1953年的警察逮捕了——<em>逮捕他的警察叫伊根·蒂德曼。</em>乌利希从此被关在精神病院。1953年到1987年,整整34年。</p>',
+clues:[
+{q:'乌利希逃出精神病院了吗?',kw:'逃 精神病院 出来',a:'yes',ans:'是的。1987年乌利希逃了出来。他找到了成年的米克尔——此时米克尔已改名为米夏埃尔,不认得他了。'},
+{q:'乌利希见到成年的米克尔了吗?',kw:'见到 米克尔 成年 儿子',a:'yes',ans:'见到了。但米克尔不认得他。乌利希试图拽着成年米克尔冲进洞穴——但失败了。米克尔挣脱了。这是最后一次。'},
+{q:'乌利希后来怎么样了?',kw:'后来 结局 死',a:'yes',ans:'逃出精神病院后他在森林里遇到了老年伊根——他在混乱中砸死了伊根。随后被再次逮捕关押终身。他死在精神病院里。'},
+],ans:'乌利希·尼尔森——那个愤怒的父亲——被困在时间的牢笼里。他试图杀死赫尔格来改变未来,却亲手将赫尔格推向黑暗。他试图带走成年的米克尔,却被儿子当作陌生人推开。<b>他在一个不属于自己的时代里老去、发疯、死亡。</b>他没有救任何人——除了制造了更多悲剧。'});
+
+P.push({n:'第十八碗汤',t:'结束即开始',s:'<p>故事的最后——在循环被打破之后。真实的世界。温登只是一个普通的德国小镇。六个人坐在餐桌旁:汉娜、乌利希、雷吉娜、卡特琳娜、彼得……没有失踪的孩子,没有时间旅行。</p><p>但汉娜在某个瞬间抬头看着窗外。她有一种奇怪的直觉——<em>好像她曾经爱过一个不该存在的人。</em>她摇了摇头,笑了。可能是幻觉。</p><p><em>而在地下室里,坦豪斯的儿子马雷克——那个本该在1888年死去的人——正活着修理一台老旧的钟。他的妻子端来两杯茶。窗外的雨,安静地下着。</em></p>',
+clues:[
+{q:'有人记得循环世界吗?',kw:'记得 记忆 循环',a:'yes',ans:'没有人完整记得。但当汉娜抬头时,当雷吉娜摸着自己从未患癌的脖子时,当乌利希对卡特琳娜微笑时——有微弱的回声。不是记忆,是痕迹。'},
+{q:'马雷克活下来了吗?',kw:'马雷克 活 儿子',a:'yes',ans:'是的。在真实世界里马雷克安全到家。坦豪斯从未制造时间机器。他的悲伤被什么轻轻拦住——也许是雨中站着的年轻男女。'},
+{q:'循环真的结束了吗?',kw:'结束 真的 彻底',a:'yes',ans:'结束了。两个世界消失了,连同所有人从未存在过。但乔纳斯和玛莎在最后一刻的选择拯救了真实世界。这个选择不是虚无。'},
+{q:'标题结束即开始是什么意思?',kw:'结束 开始 意思 标题',a:'yes',ans:'在坦豪斯的地下室里马雷克修好了那台老钟。齿轮开始转动——不是时间机器只是普通的钟。但在指针移动时窗外划过一道微光。结束就是另一种开始。'},
+],ans:'循环结束了。两个世界消失了。但在真实的世界里有些东西变了:<b>汉娜在某天晚上梦到自己从未拥有过的男孩站在雨中对她微笑。她醒来时枕头是湿的——不是悲伤,是因为她隐约知道有人曾经为她做了很了不起的事。</b>而那个人,从未出生。'});
+
+//============================= ENGINE =============================
+var puzzleIdx=0,foundClues=[],totalHints=0,totalWrongs=0,puzzleSolved=false;
+
+function enterGame(){
+totalHints=0;totalWrongs=0;
+document.getElementById('ns').style.display='none';
+document.getElementById('gm').style.display='block';
+document.getElementById('cs').style.display='none';
+puzzleIdx=0;loadPuzzle();
+}
+
+function loadPuzzle(){
+puzzleSolved=false;foundClues=[];
+var p=P[puzzleIdx];
+document.getElementById('pt').textContent='温登镇';
+document.getElementById('pl').textContent='汤 '+(puzzleIdx+1)+'/'+P.length;
+document.getElementById('pnum').textContent=p.n;
+document.getElementById('ptitle').textContent=p.t;
+document.getElementById('bowl').innerHTML=p.s;
+document.getElementById('clues').innerHTML='';
+document.getElementById('qBtns').innerHTML='';
+document.getElementById('askInp').value='';
+document.getElementById('guessInp').value='';
+document.getElementById('noMatch').innerHTML='';
+document.getElementById('wrongMsg').innerHTML='';
+document.getElementById('reveal').style.display='none';
+document.getElementById('btnNext').style.display='none';
+document.getElementById('btnPrev').style.display=puzzleIdx>0?'block':'none';
+document.getElementById('btnPrev').style.display=puzzleIdx>0?'block':'none';
+document.getElementById('btnHint').style.display='inline-block';
+document.getElementById('btnReveal').style.display='inline-block';
+renderQButtons();
+document.getElementById('reveal').style.display='none';
+updateProgress();
+}
+
+function askQuestion(){
+if(puzzleSolved)return;
+var inp=document.getElementById('askInp').value.trim().toLowerCase();
+if(!inp)return;
+var p=P[puzzleIdx];
+var best=null,bestScore=0;
+for(var i=0;i<p.clues.length;i++){
+var c=p.clues[i];
+if(foundClues.indexOf(c)>=0)continue;
+var ckws=c.kw.split(' ');
+var score=0;
+for(var j=0;j<ckws.length;j++){
+if(ckws[j]&&inp.indexOf(ckws[j])>=0)score+=2;
+}
+// Bonus: match words in the question text itself
+var qwords=c.q.toLowerCase().replace(/[?？]/g,'').split(/\s+/);
+for(var k=0;k<qwords.length;k++){
+if(qwords[k].length>1&&inp.indexOf(qwords[k])>=0)score+=1;
+}
+if(score>bestScore){best=c;bestScore=score;}
+}
+if(best){
+foundClues.push(best);
+renderClues();
+document.getElementById('noMatch').innerHTML='';
+}else{
+document.getElementById('noMatch').innerHTML='<div class="no-match">森林没有回应这个问题。试试别的角度。</div>';
+setTimeout(function(){document.getElementById('noMatch').innerHTML=''},2500);
+}
+document.getElementById('askInp').value='';
+}
+
+function renderClues(){
+var h='';
+for(var i=0;i<foundClues.length;i++){
+var c=foundClues[i];
+var tag='';
+if(c.a==='yes')tag='<span class="clue-tag yes">是</span>';
+else if(c.a==='no')tag='<span class="clue-tag no">否</span>';
+else tag='<span class="clue-tag irrelevant">复杂</span>';
+h+='<div class="clue"><div>'+tag+c.q+'</div><div style="font-size:15px;color:#b8a890">'+c.ans+'</div></div>';
+}
+document.getElementById('clues').innerHTML=h;
+renderQButtons();
+}
+
+function renderQButtons(){
+var p=P[puzzleIdx];
+var h='';
+for(var i=0;i<p.clues.length;i++){
+var c=p.clues[i];
+var used=foundClues.indexOf(c)>=0;
+h+='<button class="qbtn'+(used?' used':'')+'" onclick="askByIndex('+i+')">'+c.q+'</button>';
+}
+document.getElementById('qBtns').innerHTML=h;
+}
+
+function askByIndex(idx){
+if(puzzleSolved)return;
+var c=P[puzzleIdx].clues[idx];
+if(foundClues.indexOf(c)>=0)return;
+foundClues.push(c);
+renderClues();
+}
+
+function submitGuess(){
+if(puzzleSolved)return;
+var g=document.getElementById('guessInp').value.trim();
+if(!g)return;
+totalWrongs++;
+var p=P[puzzleIdx];
+var gl=g.toLowerCase();
+var matched=false;
+// Check if guess contains key entities from answer
+var entities=[];
+var em=p.ans.match(/<b>([^<]+)<\/b>/g);
+if(em)for(var i=0;i<em.length;i++)entities.push(em[i].replace(/<\/?b>/g,'').toLowerCase());
+for(var i=0;i<entities.length;i++){
+if(gl.indexOf(entities[i])>=0){matched=true;break}
+}
+var words=gl.split(/\s+/);
+if(!matched && g.length>15 && foundClues.length>=2 && words.length>6)matched=true;
+if(matched){
+puzzleSolved=true;
+document.getElementById('reveal').innerHTML=p.ans;
+document.getElementById('reveal').style.display='block';
+document.getElementById('btnNext').style.display='block';
+document.getElementById('btnPrev').style.display=puzzleIdx>0?'block':'none';
+document.getElementById('btnHint').style.display='none';
+document.getElementById('btnReveal').style.display='none';
+document.getElementById('wrongMsg').innerHTML='';
+}else{
+document.getElementById('wrongMsg').innerHTML='<div class="wrong">还不够接近。继续提问,积累更多线索。</div>';
+document.getElementById('guessInp').value='';
+}
+}
+
+function giveHint(){
+if(puzzleSolved)return;
+var p=P[puzzleIdx];
+var remaining=[];
+for(var i=0;i<p.clues.length;i++){if(foundClues.indexOf(p.clues[i])<0)remaining.push(p.clues[i])}
+if(remaining.length===0)return;
+totalHints++;
+var hint=remaining[Math.floor(Math.random()*remaining.length)];
+foundClues.push(hint);
+renderClues();
+}
+
+function revealAnswer(){
+if(puzzleSolved)return;
+puzzleSolved=true;
+var p=P[puzzleIdx];
+document.getElementById('reveal').innerHTML=p.ans;
+document.getElementById('reveal').style.display='block';
+document.getElementById('btnNext').style.display='block';
+document.getElementById('btnPrev').style.display=puzzleIdx>0?'block':'none';
+document.getElementById('btnHint').style.display='none';
+document.getElementById('btnReveal').style.display='none';
+document.getElementById('wrongMsg').innerHTML='';
+}
+
+function nextPuzzle(){
+if(puzzleIdx<P.length-1){puzzleIdx++;loadPuzzle();window.scrollTo(0,0)}
+else{showComplete()}
+}
+
+function prevPuzzle(){
+if(puzzleIdx>0){puzzleIdx--;loadPuzzle();window.scrollTo(0,0)}
+}
+
+function showComplete(){
+document.getElementById('gm').style.display='none';
+document.getElementById('cs').style.display='block';
+document.getElementById('statsBox').innerHTML='<p>你走完了温登的全部时间线。</p><p>使用提示: <b>'+totalHints+'</b> 次 · 错误猜测: <b>'+totalWrongs+'</b> 次</p><br><p style="font-style:italic;color:var(--text-dim)">时间是一个圆。现在你也是这个圆的一部分了。</p>';
+}
+
+function updateProgress(){
+document.getElementById('pf').style.width=(puzzleIdx/P.length)*100+'%';
+}
+
+function restartGame(){
+puzzleIdx=0;totalHints=0;totalWrongs=0;
+document.getElementById('gm').style.display='none';
+document.getElementById('cs').style.display='none';
+document.getElementById('ns').style.display='flex';
+updateProgress();
+}
+
+// Attach event listeners
+document.getElementById('btnGo').addEventListener('click',enterGame);
+document.getElementById('btnAsk').addEventListener('click',askQuestion);
+document.getElementById('btnGuess').addEventListener('click',submitGuess);
+document.getElementById('btnHint').addEventListener('click',giveHint);
+document.getElementById('btnReveal').addEventListener('click',revealAnswer);
+document.getElementById('btnNext').addEventListener('click',nextPuzzle);
+document.getElementById('btnPrev').addEventListener('click',prevPuzzle);
+document.getElementById('btnRe').addEventListener('click',restartGame);
+// Enter key support for ask and guess
+document.getElementById('askInp').addEventListener('keydown',function(e){if(e.key==='Enter')askQuestion()});
+document.getElementById('guessInp').addEventListener('keydown',function(e){if(e.key==='Enter')submitGuess()});
+</script>
+</body>
+</html>
