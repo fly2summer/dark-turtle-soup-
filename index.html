@@ -472,6 +472,7 @@ var h='';
 h+='<button class="inv-btn'+disabled+'" onclick="investigate(\'witness\')"><span class="ico">\uD83D\uDDE3</span><span class="lbl">询问证人 ('+witnessCount+')</span></button>';
 h+='<button class="inv-btn'+disabled+'" onclick="investigate(\'evidence\')"><span class="ico">\uD83D\uDCCB</span><span class="lbl">检查证物 ('+evidenceCount+')</span></button>';
 h+='<button class="inv-btn'+disabled+'" onclick="investigate(\'place\')"><span class="ico">\uD83D\uDDFA</span><span class="lbl">勘察地点 ('+placeCount+')</span></button>';
+h+='</div><button class="btn" style="padding:6px 16px;font-size:11px;letter-spacing:2px;border-color:var(--border);color:var(--text-dim);margin-top:4px" onclick="showTimeline()">▸ 进入时间线重组</button>';
 document.getElementById('invActions').innerHTML=h;
 }
 
@@ -491,8 +492,11 @@ renderClues();
 renderInvButtons();
 document.getElementById('invCount').textContent=actLeft;
 document.getElementById('clueCount').textContent=foundClues.length;
-if(actLeft<=0){
-// Show timeline
+// Show timeline when actions run out OR all clues are found
+var allFound=true;
+for(var i=0;i<p.clues.length;i++){if(foundClues.indexOf(p.clues[i])<0){allFound=false;break}}
+if(actLeft<=0||allFound){
+if(!allFound&&actLeft>0)actLeft=0;
 showTimeline();
 }
 }
