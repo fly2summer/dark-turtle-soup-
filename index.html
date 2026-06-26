@@ -574,12 +574,12 @@ tlSolved=true;
 document.getElementById('tlResult').innerHTML='<span class="tl-result correct">✓ 时间线正确。你理解了——时间不是一个箭头。</span>';
 showAnswer();
 }else{
-document.getElementById('tlResult').innerHTML='<span class="tl-result wrong">✗ 排序不对。再试试——想想因果。</span>';
-setTimeout(function(){document.getElementById('tlResult').innerHTML=''},2500);
+document.getElementById('tlResult').innerHTML='<span class="tl-result wrong">✗ 排序不对。</span> <button class="btn" style="padding:6px 16px;font-size:11px;letter-spacing:2px;border-color:var(--border);color:var(--text-dim)" onclick="showAnswer()">直接查看结论</button>';
 }
 }
 
 function showAnswer(){
+tlSolved=true;
 var p=P[puzzleIdx];
 document.getElementById('reveal').innerHTML=p.ans;
 document.getElementById('reveal').style.display='block';
